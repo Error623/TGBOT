@@ -3,6 +3,8 @@ from config import BOT_TOKEN, ADMIN_IDS
 from users import get_user, can_use, users
 from models import ask_model
 from keyboards import model_keyboard
+from payments import create_payment, check_payment
+
 bot = telebot.TeleBot(BOT_TOKEN)
 
 
@@ -14,6 +16,31 @@ def start(message):
         "Выбрать модель",
         reply_markup=model_keyboard()
     )
+
+
+
+@bot.message_handler(commands=["buy"])
+def buy(message):
+    user_id = message.from_user.id
+
+    payment = create_payment(user_id, amount=199)
+
+    bot.send_message(
+        message.chat.id,
+        f"Тестовая оплата\n"
+        f"Сумма: {payment['amount']} ₽\n"
+        f"Ссылка: {payment['confirmation_url']}\n"
+        f"(Юкасса в тестовом режиме)"
+    )
+
+@bot.message_handler(commands=["check"])
+def check(message):
+    paid = check_payment("test")
+
+    if paid:
+        bot.send_message(message.chat.id, "Платёж принят")
+    else:
+        bot.send_message(message.chat.id, "Платёж не завершён либо отклонён")
 
 
 @bot.message_handler(commands=["id"])
